@@ -4,6 +4,10 @@ All notable changes to this project are documented here. The format follows
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and the project uses
 [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-11-09
+
+First stable release. Functionally identical to 0.1.0-beta.1; the version number now reflects that the feature set is complete. Verification is unchanged: only a Superlight 2 behind a LIGHTSPEED receiver on Windows 11 has been tested, and builds remain unsigned.
+
 ## [0.1.0-beta.1] - 2026-11-09
 
 First public beta.

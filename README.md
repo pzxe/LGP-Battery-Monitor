@@ -15,7 +15,7 @@
   <img alt="Platform: Windows 10/11 x64" src="https://img.shields.io/badge/platform-Windows%2010%20%7C%2011%20x64-informational">
 </p>
 
-> **Beta software.** Verified on one setup only: a G Pro X Superlight 2 behind a LIGHTSPEED receiver on Windows 11. See [Supported devices](#supported-devices) and [Known limitations](#known-limitations). Not affiliated with or endorsed by Logitech.
+> **Stable release, narrow verification.** Verified on one setup only: a G Pro X Superlight 2 behind a LIGHTSPEED receiver on Windows 11. See [Supported devices](#supported-devices) and [Known limitations](#known-limitations). Not affiliated with or endorsed by Logitech.
 
 ## Screenshots
 
@@ -105,7 +105,7 @@ cargo build --release                         # target\release\lgp-battery-monit
 ```
 
 Installer (optional): `winget install JRSoftware.InnoSetup`, then
-`ISCC /DAppVersion=0.1.0-beta.1 installer\lgp-battery-monitor.iss` → `dist\`.
+`ISCC /DAppVersion=1.0.0 installer\lgp-battery-monitor.iss` → `dist\`.
 
 ### Development environment used for this release
 

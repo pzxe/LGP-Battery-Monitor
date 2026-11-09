@@ -1,6 +1,6 @@
 [package]
 name = "lgp-battery-monitor"
-version = "0.1.0-beta.1"
+version = "1.0.0"
 edition = "2024"
 description = "A lightweight Windows system tray battery monitor for the Logitech G Pro X Superlight 2."
 license = "MIT"

@@ -1,6 +1,6 @@
 # Third-party licenses
 
-Generated with `cargo license --avoid-dev-deps` for version 0.1.0-beta.1. Every crate is available under a permissive license option; the single MPL-2.0 crate (option-ext) is used unmodified. The egui default fonts (Ubuntu-Font, OFL-1.1, emoji fonts) are bundled by egui.
+Generated with `cargo license --avoid-dev-deps` for version 1.0.0. Every crate is available under a permissive license option; the single MPL-2.0 crate (option-ext) is used unmodified. The egui default fonts (Ubuntu-Font, OFL-1.1, emoji fonts) are bundled by egui.
 
 | Crate | Version | License |
 |---|---|---|
