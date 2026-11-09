@@ -1,0 +1,20 @@
+name: Hardware report
+description: Tell us whether your Logitech device works
+labels: [hardware]
+body:
+  - type: input
+    id: device
+    attributes: { label: Device model and connection (receiver / USB cable) }
+    validations: { required: true }
+  - type: dropdown
+    id: works
+    attributes:
+      label: Does the battery percentage match G HUB?
+      options: [Yes, No, Percentage missing, App shows an error]
+    validations: { required: true }
+  - type: textarea
+    id: probe
+    attributes:
+      label: Output of `lgp-battery-monitor.exe --probe`
+      render: text
+    validations: { required: true }

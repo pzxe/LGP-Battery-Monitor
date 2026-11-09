@@ -1,0 +1,101 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: windows-latest
+    outputs:
+      version: ${{ steps.ver.outputs.version }}
+      artifact-id: ${{ steps.unsigned.outputs.artifact-id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - id: ver
+        shell: bash
+        run: echo "version=$(grep -m1 '^version' Cargo.toml | cut -d '"' -f2)" >> "$GITHUB_OUTPUT"
+      - name: Verify tag matches Cargo.toml
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        run: test "${GITHUB_REF_NAME#v}" = "${{ steps.ver.outputs.version }}"
+      - run: cargo test --locked
+      - run: cargo build --release --locked
+      - name: Install Inno Setup if missing
+        shell: pwsh
+        run: |
+          if (-not (Get-Command iscc -ErrorAction SilentlyContinue) -and -not (Test-Path "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe")) { choco install innosetup -y --no-progress }
+      - name: Build installer
+        shell: pwsh
+        run: |
+          $iscc = (Get-Command iscc -ErrorAction SilentlyContinue).Source
+          if (-not $iscc) { $iscc = "${env:ProgramFiles(x86)}\Inno Setup 6\ISCC.exe" }
+          & $iscc "/DAppVersion=${{ steps.ver.outputs.version }}" installer\lgp-battery-monitor.iss
+      - name: Stage artifacts
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory dist-out | Out-Null
+          Copy-Item target\release\lgp-battery-monitor.exe "dist-out\LGP-Battery-Monitor-${{ steps.ver.outputs.version }}-portable-x64.exe"
+          Copy-Item "dist\LGP-Battery-Monitor-${{ steps.ver.outputs.version }}-setup.exe" dist-out\
+      - uses: actions/upload-artifact@v4
+        id: unsigned
+        with:
+          name: unsigned-binaries
+          path: dist-out/*
+          if-no-files-found: error
+
+  # Prepared for SignPath Foundation. Disabled until a SignPath project is approved
+  # and the repository variable SIGNPATH_ENABLED is set to "true". NOT yet tested.
+  sign:
+    needs: build
+    if: ${{ vars.SIGNPATH_ENABLED == 'true' }}
+    runs-on: windows-latest
+    steps:
+      - uses: signpath/github-action-submit-signing-request@v1
+        with:
+          api-token: ${{ secrets.SIGNPATH_API_TOKEN }}
+          organization-id: ${{ vars.SIGNPATH_ORGANIZATION_ID }}
+          project-slug: lgp-battery-monitor
+          signing-policy-slug: release-signing
+          github-artifact-id: ${{ needs.build.outputs.artifact-id }}
+          wait-for-completion: true
+          output-artifact-directory: signed
+
+  publish:
+    needs: [build]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: windows-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: unsigned-binaries
+          path: dist-out
+      - name: Checksums and release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = "${{ github.ref_name }}"
+          $notes = "docs/release-notes/$tag.md"
+          $sums = Get-ChildItem dist-out -File | ForEach-Object { "$((Get-FileHash $_.FullName -Algorithm SHA256).Hash.ToLower())  $($_.Name)" }
+          $sums | Set-Content dist-out/SHA256SUMS.txt -Encoding ascii
+          $body = if (Test-Path $notes) { Get-Content $notes -Raw } else { "Release $tag" }
+          $fence = '```'
+          $body += "`n`n## SHA256 checksums`n`n$fence`n" + ($sums -join "`n") + "`n$fence`n"
+          Set-Content release-body.md $body -Encoding utf8
+          $flags = @()
+          if ($tag -like "*-*") { $flags += "--prerelease" }
+          $files = Get-ChildItem dist-out -File | ForEach-Object { $_.FullName }
+          gh release create $tag @files --repo "${{ github.repository }}" --title "LGP Battery Monitor $tag" --notes-file release-body.md @flags

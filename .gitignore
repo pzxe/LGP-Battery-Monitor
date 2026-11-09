@@ -1,0 +1,11 @@
+/target
+/dist
+*.pdb
+*.log
+.vscode/
+.idea/
+.claude/
+*.pfx
+*.p12
+*.snk
+.env
